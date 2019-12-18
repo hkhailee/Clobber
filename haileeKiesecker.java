@@ -43,113 +43,129 @@ public class haileeKiesecker extends ClobberBot
     */
     public ClobberBotAction takeTurn(WhatIKnow currState)
     {
-        //showWhatIKnow(currState); // @@@ Uncomment this line to see it print out all bullet and bot positions every turn
+        double x2 =currState.me.getX();
+        double y2 =currState.me.getY();
+        showWhatIKnow(currState); // @@@ Uncomment this line to see it print out all bullet and bot positions every turn
         shotclock--;
-        if(shotclock<=0)
+        if(shotclock<=0) //CAN SHOOT
         {
-            shotAction =null;
-            double x2 =currState.me.getX();
-            double y2 =currState.me.getY();
-            shotAction = stuck(x2,y2);
-            if(shotAction != null){
-                return shotAction;
-            }
-            else{
-            //-----move first if there is a bullet---------------
-            double closerPoint=10000000000000.0;
-            shotclock=game.getShotFrequency()+1;
-            Iterator<BulletPoint2D> it = currState.bullets.iterator();
-            while(it.hasNext())
+        shotclock=game.getShotFrequency()+1;
+        shotAction =null;
+       //System.out.println(shotclock);
+
+            return takeShot(x2, y2, currState);
+        }
+       
+   
+        //---this hardly ever happens --------------------------------               
+        else 
+        {   
+            //currAction = stuck(x2,y2);
+        
+            // if(currAction != null){
+            //     return currAction;
+            // }
+           // else{
+                //-----move first if there is a bullet---------------
+                double closerPoint=Double.MAX_VALUE;
+                //shotclock=game.getShotFrequency()+1;
+                Iterator<BulletPoint2D> it = currState.bullets.iterator();
+                while(it.hasNext())
+                {
+                    ImmutablePoint2D p = (ImmutablePoint2D)(it.next());
+                    double x1 = p.getX(); 
+                    double y1 = p.getY();
+                
+                    double x =Math.abs(x1-x2);
+                    double y =Math.abs(y1-y2);
+
+                    double closer = Math.sqrt(Math.pow(x,2)+Math.pow(y,2));
+                    //System.out.println(closer);
+                    //if bullet is within current bot move
+                    if(closer< 150.0 && closer <= closerPoint){
+                        //System.out.println(closer);
+                        closerPoint=closer;
+                        currAction= shootActionMoveMethod(x1, x2, y1, y2); //calls method to deal with logic  
+                    }
+                } 
+                if(currAction == null){
+                //System.out.println("-----random move-----");
+                //scurrAction = randomMove();
+                }
+           // }
+
+        }//end else if
+        
+        return currAction;  
+
+    }//end method
+    
+    double botDist =250;
+    public ClobberBotAction takeShot(double x2, double y2, WhatIKnow currState){
+
+         //-----if there is not a bullet shoot at a close bot---------------
+         if(shotAction==null){
+            //this is repetitive I know
+           // shotAction = stuck(x2,y2);
+            // if(shotAction != null){
+            //     return shotAction;
+            // }
+        
+            //get all the bots 
+            Iterator<BotPoint2D> bit = currState.bots.iterator();
+            double canHitBetter = 1000000000.0;
+            while(bit.hasNext())
             {
-                ImmutablePoint2D p = (ImmutablePoint2D)(it.next());
-                double x1 = p.getX(); 
+                ImmutablePoint2D p = (ImmutablePoint2D)(bit.next());
+                
+                double x1 = p.getX();
                 double y1 = p.getY();
-            
+               
                 double x =x1-x2;
                 double y =y1-y2;
 
-                double closer = Math.sqrt(Math.pow(x,2)+Math.pow(y,2));
-                
-                //if bullet is within current bot move
-                if(closer< 150.0 && closer <= closerPoint){
-                    closerPoint=closer;
-                    //System.out.println(closer);
-                    shotAction= shootActionMoveMethod(x1, x2, y1, y2); //calls method to deal with logic  
-                }
-            } 
-            
-            //-----if there is not a bullet shoot at a close bot---------------
-            if(shotAction==null){
-                //this is repetitive I know
-                shotAction = stuck(x2,y2);
-                if(shotAction != null){
-                    return shotAction;
-                }
-            
-                //get all the bots 
-                Iterator<BotPoint2D> bit = currState.bots.iterator();
-                double canHitBetter = 1000000000.0;
-                while(bit.hasNext())
-                {
-                    ImmutablePoint2D p = (ImmutablePoint2D)(bit.next());
+                double canHit = Math.sqrt(Math.pow(x,2)+Math.pow(y,2));
                     
-                    double x1 = p.getX();
-                    double y1 = p.getY();
-                   
-                    double x =x1-x2;
-                    double y =y1-y2;
-
-                    double canHit = Math.sqrt(Math.pow(x,2)+Math.pow(y,2));
-                        
-                    if(canHit < 250 && canHit<= canHitBetter){
-                        canHitBetter = canHit;
-                        //System.out.println(canHitBetter + "--------");
-                        
-                        //bot too close evasive action
-                       if(canHitBetter < 20.0){
-                           shotAction = stuck(x2,y2);
-                           if(shotAction == null )
-                           shotAction = shootActionMoveMethod(x1,x2,y1,y2);
-                       }
-                        //kill the intruders tiberus!!
-                       else{
-                            if(x1> x2 && y1==y2){
-                                shotAction = new ClobberBotAction(ClobberBotAction.SHOOT, ClobberBotAction.LEFT);
-                            }
-                            if(x1<x2 && y1==y2){
-                                shotAction = new ClobberBotAction(ClobberBotAction.SHOOT, ClobberBotAction.RIGHT);
-                            }
-                            if(x1== x2 && y1<y2){
-                                shotAction = new ClobberBotAction(ClobberBotAction.SHOOT, ClobberBotAction.UP);
-                        
-                            }
-                            if(x1== x2 && y1>y2){
-                                shotAction = new ClobberBotAction(ClobberBotAction.SHOOT, ClobberBotAction.DOWN);
-                            }
+                if(canHit < botDist && canHit<= canHitBetter){
+                    botDist +=5.0;
+                    canHitBetter = canHit;
+                    //System.out.println(canHitBetter + "--------");
+                    
+                    //bot too close evasive action
+                   if(canHitBetter < 20.0){
+                       //shotAction = stuck(x2,y2);
+                       //if(shotAction == null )
+                       shotAction = shootActionMoveMethod(x1,x2,y1,y2);
+                   }
+                    //kill the intruders tiberus!!
+                   else{
+                        if(x1> x2 && y1==y2){
+                            shotAction = new ClobberBotAction(ClobberBotAction.SHOOT, ClobberBotAction.LEFT);
+                        }
+                        if(x1<x2 && y1==y2){
+                            shotAction = new ClobberBotAction(ClobberBotAction.SHOOT, ClobberBotAction.RIGHT);
+                        }
+                        if(x1== x2 && y1<y2){
+                            shotAction = new ClobberBotAction(ClobberBotAction.SHOOT, ClobberBotAction.UP);
+                    
+                        }
+                        if(x1== x2 && y1>y2){
+                            shotAction = new ClobberBotAction(ClobberBotAction.SHOOT, ClobberBotAction.DOWN);
                         }
                     }
-                    //if cannot shoot directly at bot randomly shoot------------------
-                    else{
-                        shotAction = randomShoot();
-                    }//end else
+                }
+                //if cannot shoot directly at bot randomly shoot------------------
+                else{
+                    shotAction = randomShoot();
+                }//end else
 
-                }//end while
-                
-            }//end if shotnull
-        
-            return shotAction; 
-         }
-        }//end first if
-   
-        //---this hardly ever happens --------------------------------               
-        else if(currAction==null || rand.nextInt(20)>18)
-        {   
-            //System.out.println("-----random move-----");
-            currAction = randomMove();
-        }//end else if
-        return currAction;  
-    }//end method
-    
+            }//end while
+            
+        }//end if shotnull
+
+        return shotAction;
+    }
+
     /**
      * logic for moving away from a bullet in clobber currently without taking 
      * in the angle of the bullet
@@ -160,64 +176,55 @@ public class haileeKiesecker extends ClobberBot
      * @return
      */
     public ClobberBotAction shootActionMoveMethod(double x1,double x2,double y1,double y2){
-        shotAction = null;
-        if(x1> x2 && y1==y2 || x1<x2 && y1==y2){
+        currAction = null;
+        if(x1> x2 && y1==y2 || x1<x2 && y1==y2){ //ON SAME Y LEVEL
             //too far up 
             if(y2<= 25){
-                shotAction = new ClobberBotAction(ClobberBotAction.MOVE, ClobberBotAction.DOWN);
+                currAction = new ClobberBotAction(ClobberBotAction.MOVE, ClobberBotAction.DOWN);
             }
 
             //too far down
             else if(y2 >= 585){
-                shotAction = new ClobberBotAction(ClobberBotAction.MOVE, ClobberBotAction.UP);
+                currAction = new ClobberBotAction(ClobberBotAction.MOVE, ClobberBotAction.UP);
             }
             else{
-                switch(rand.nextInt(2)){
-                    case 0:
-                    shotAction = new ClobberBotAction(ClobberBotAction.MOVE, ClobberBotAction.DOWN);
-                    break;
-                    case 1:
-                    shotAction = new ClobberBotAction(ClobberBotAction.MOVE, ClobberBotAction.UP);
-                    break;
+                
+                    currAction = new ClobberBotAction(ClobberBotAction.MOVE, ClobberBotAction.DOWN);
+                    
 
                 } 
-            }
+            
         } 
-        if(x1== x2 && y1<y2 || x1== x2 && y1>y2){
+        else if(x1== x2 && y1<y2 || x1== x2 && y1>y2){
             //too far right
             if(x2>= 585){
-                shotAction = new ClobberBotAction(ClobberBotAction.MOVE, ClobberBotAction.LEFT);
+                currAction = new ClobberBotAction(ClobberBotAction.MOVE, ClobberBotAction.LEFT);
             }
             //too far left
             else if(x2<=25){
-                shotAction = new ClobberBotAction(ClobberBotAction.MOVE, ClobberBotAction.RIGHT);
+                currAction = new ClobberBotAction(ClobberBotAction.MOVE, ClobberBotAction.RIGHT);
             }
             else{
-                switch(rand.nextInt(2)){
-                    case 0:
-                    shotAction = new ClobberBotAction(ClobberBotAction.MOVE, ClobberBotAction.RIGHT);
-                    break;
-                    case 1:
-                    shotAction = new ClobberBotAction(ClobberBotAction.MOVE, ClobberBotAction.LEFT);
-                    break;
-                }
+                
+                    currAction = new ClobberBotAction(ClobberBotAction.MOVE, ClobberBotAction.LEFT);
+                 
             }
         }
-        if(x1> x2 && y1<y2){
-            shotAction = new ClobberBotAction(ClobberBotAction.MOVE, ClobberBotAction.UP);
+        else if(x1> x2 && y1<y2){ //top right quad
+            currAction = new ClobberBotAction(ClobberBotAction.MOVE, ClobberBotAction.LEFT);
         } 
-        if(x1< x2 && y1>y2){
-            shotAction = new ClobberBotAction(ClobberBotAction.MOVE, ClobberBotAction.DOWN);
+        else if(x1< x2 && y1>y2){//lower left quad
+            currAction = new ClobberBotAction(ClobberBotAction.MOVE, ClobberBotAction.UP);
         }
-        if(x1> x2 && y1>y2){
-            shotAction = new ClobberBotAction(ClobberBotAction.MOVE, ClobberBotAction.RIGHT);
+        else if(x1> x2 && y1>y2){//lower right quad
+            currAction = new ClobberBotAction(ClobberBotAction.MOVE, ClobberBotAction.UP);
         }
-        if(x1< x2 && y1<y2){
-            shotAction = new ClobberBotAction(ClobberBotAction.MOVE, ClobberBotAction.LEFT);
+        else if(x1< x2 && y1<y2){ //TOP left quad
+            currAction = new ClobberBotAction(ClobberBotAction.MOVE, ClobberBotAction.DOWN);
         }
        
-        if (shotAction != null){
-            return shotAction;
+        if (currAction != null){
+            return currAction;
         }
         else return null;
       
@@ -296,40 +303,40 @@ public class haileeKiesecker extends ClobberBot
         return shotAction;
 
     }
-    /**make sure that we dont get stuck on the boarder */
-    public ClobberBotAction stuck(double x1,double y1){
-        shotAction = null;
-        //if stuck on top
-        if(y1<=10){
-            //move down
-            shotAction = new ClobberBotAction(ClobberBotAction.MOVE, ClobberBotAction.DOWN);
-        }
-        //stuck on left wall
-        if(x1<=10){
-            //move right
-            shotAction = new ClobberBotAction(ClobberBotAction.MOVE, ClobberBotAction.RIGHT);
-        }
+    // /**make sure that we dont get stuck on the boarder */
+    // public ClobberBotAction stuck(double x1,double y1){
+    //     currAction = null;
+    //     //if stuck on top
+    //     if(y1<=10){
+    //         //move down
+    //         currAction = new ClobberBotAction(ClobberBotAction.MOVE, ClobberBotAction.DOWN);
+    //     }
+    //     //stuck on left wall
+    //     else if(x1<=10){
+    //         //move right
+    //         currAction = new ClobberBotAction(ClobberBotAction.MOVE, ClobberBotAction.RIGHT);
+    //     }
 
-        //stuck on bottom
-        if(y1>=590){
-            //move up
-            shotAction = new ClobberBotAction(ClobberBotAction.MOVE, ClobberBotAction.UP);
-        }
-        if(x1>=590){
-            //move left
-            shotAction = new ClobberBotAction(ClobberBotAction.MOVE, ClobberBotAction.LEFT);
-        }
+    //     //stuck on bottom
+    //     else if(y1>=590){
+    //         //move up
+    //         currAction = new ClobberBotAction(ClobberBotAction.MOVE, ClobberBotAction.UP);
+    //     }
+    //     else if(x1>=590){
+    //         //move left
+    //         currAction = new ClobberBotAction(ClobberBotAction.MOVE, ClobberBotAction.LEFT);
+    //     }
 
-        //stuck in top corner
-        if(x1 <=10 && y1 <= 10){
-            shotAction = new ClobberBotAction(ClobberBotAction.MOVE, ClobberBotAction.LEFTDOWN);
-        }
+    //     //stuck in top corner
+    //     else if(x1 <=10 && y1 <= 10){
+    //         shotAction = new ClobberBotAction(ClobberBotAction.MOVE, ClobberBotAction.LEFTDOWN);
+    //     }
 
-        if(shotAction != null){
-             return shotAction;
-        }
-        else return null;
-    }
+    //     if(currAction != null){
+    //          return currAction;
+    //     }
+    //     else return null;
+    // }
 
     public String toString()
     {
