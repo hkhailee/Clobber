@@ -10,7 +10,8 @@ public class haileeKiesecker extends ClobberBot
 
     ClobberBotAction currAction, shotAction;
     int shotclock;
-
+    int numMovesBullet=0;
+    Queue<ClobberBotAction> toDo = new LinkedList<ClobberBotAction>();
     public haileeKiesecker(Clobber game)
     {
         super(game);
@@ -79,42 +80,19 @@ public class haileeKiesecker extends ClobberBot
         }
         else if(currAction==null || rand.nextInt(20)>18)
         {
-            switch(decideMove(currState))
-            {
-              
-                case 1:
-                    currAction = new ClobberBotAction(ClobberBotAction.MOVE, ClobberBotAction.LEFT);
-                break;
-                case 2:
-                    currAction = new ClobberBotAction(ClobberBotAction.MOVE, ClobberBotAction.LEFTUP);
-                break;
-                case 3:
-                    currAction = new ClobberBotAction(ClobberBotAction.MOVE, ClobberBotAction.UP);
-                break;
-                case 4:
-                    currAction = new ClobberBotAction(ClobberBotAction.MOVE, ClobberBotAction.RIGHTUP);
-                break;
-                case 5:
-                    currAction = new ClobberBotAction(ClobberBotAction.MOVE, ClobberBotAction.RIGHT);
-                break;
-                case 6:
-                    currAction = new ClobberBotAction(ClobberBotAction.MOVE, ClobberBotAction.RIGHTDOWN );
-                break;
-                case 7:
-                    currAction = new ClobberBotAction(ClobberBotAction.MOVE, ClobberBotAction.DOWN );
-                break;
-                case 8:
-                    currAction = new ClobberBotAction(ClobberBotAction.MOVE, ClobberBotAction.LEFTDOWN );
-                break;
-                default:
-                    currAction = new ClobberBotAction(ClobberBotAction.MOVE, ClobberBotAction.NONE);
-                break;
+            System.out.println(toDo.toString());
+            if(toDo.isEmpty()){
+               currAction= decideMove(currState);
+            }
+            else{
+                currAction = toDo.remove();
+
             }
         }
         return currAction;
     }
 
-    private int decideMove(WhatIKnow currState){
+    private ClobberBotAction decideMove(WhatIKnow currState){
         Iterator<BulletPoint2D> it = currState.bullets.iterator();
         BulletPoint2D closestBullet =null;
         double closeBullet = Double.MAX_VALUE;
@@ -129,23 +107,74 @@ public class haileeKiesecker extends ClobberBot
             double y2  = Math.pow(y,2);
             double c = Math.sqrt( x2+y2 );
             
-            if (c < closeBullet && c < 250.0){
-                System.out.println(c);
-                
+            if (c < 200.0){
                 closeBullet = c;
                 closestBullet = p;
+                int quad = whatQuad(closestBullet.getX(), closestBullet.getY(), currState);
+                System.out.println(quad);
+                switch(quad)
+                {
+                    case 1:
+                        currAction = new ClobberBotAction(ClobberBotAction.MOVE, ClobberBotAction.LEFT);
+                        for(int i = 0 ; i <= numMovesBullet ; i++){
+                        toDo.add(new ClobberBotAction(ClobberBotAction.MOVE, ClobberBotAction.LEFT));
+                        }
+                        
+                    break;
+                    case 2:
+                        currAction = new ClobberBotAction(ClobberBotAction.MOVE, ClobberBotAction.LEFTUP);
+                        for(int i = 0 ; i <= numMovesBullet ; i++){
+                            toDo.add(new ClobberBotAction(ClobberBotAction.MOVE, ClobberBotAction.LEFTUP));
+                            }
+                    break;
+                    case 3:
+                        currAction = new ClobberBotAction(ClobberBotAction.MOVE, ClobberBotAction.UP);
+                        for(int i = 0 ; i <= numMovesBullet ; i++){
+                            toDo.add(new ClobberBotAction(ClobberBotAction.MOVE, ClobberBotAction.UP));
+                            }
+                    break;
+                    case 4:
+                        currAction = new ClobberBotAction(ClobberBotAction.MOVE, ClobberBotAction.LEFTDOWN);
+                        for(int i = 0 ; i <= numMovesBullet ; i++){
+                            toDo.add(new ClobberBotAction(ClobberBotAction.MOVE, ClobberBotAction.LEFTDOWN));
+                            }
+                    break;
+                    case 5:
+                        currAction = new ClobberBotAction(ClobberBotAction.MOVE, ClobberBotAction.RIGHT);
+                        for(int i = 0 ; i <= numMovesBullet ; i++){
+                            toDo.add(new ClobberBotAction(ClobberBotAction.MOVE, ClobberBotAction.RIGHT));
+                            }
+                    break;
+                    case 6:
+                        currAction = new ClobberBotAction(ClobberBotAction.MOVE, ClobberBotAction.RIGHTDOWN );
+                        for(int i = 0 ; i <= numMovesBullet ; i++){
+                            toDo.add(new ClobberBotAction(ClobberBotAction.MOVE, ClobberBotAction.RIGHTDOWN));
+                            }
+                    break;
+                    case 7:
+                        currAction = new ClobberBotAction(ClobberBotAction.MOVE, ClobberBotAction.DOWN );
+                        for(int i = 0 ; i <= numMovesBullet ; i++){
+                            toDo.add(new ClobberBotAction(ClobberBotAction.MOVE, ClobberBotAction.DOWN));
+                            }
+                    break;
+                    case 8:
+                        currAction = new ClobberBotAction(ClobberBotAction.MOVE, ClobberBotAction.RIGHTUP );
+                        for(int i = 0 ; i <= numMovesBullet ; i++){
+                            toDo.add(new ClobberBotAction(ClobberBotAction.MOVE, ClobberBotAction.RIGHTUP));
+                            }
+                    break;
+                    default:
+                        currAction = new ClobberBotAction(ClobberBotAction.MOVE, ClobberBotAction.NONE);
+                  
+                    break;
+                }
+                
             }
+            return currAction;
             
         }
-
-        //where is the bullet
-        if(closestBullet != null){
-        return whatQuad(closestBullet.getX(), closestBullet.getY(), currState);
-        }
-        else{
-            return 0;
-        }
-
+        return new ClobberBotAction(ClobberBotAction.MOVE, ClobberBotAction.NONE);
+       
     }
 
     private int whatQuad(double bulletX, double bulletY, WhatIKnow currState){
@@ -179,10 +208,6 @@ public class haileeKiesecker extends ClobberBot
         
 
     }
-
-    
-
-
 
     public String toString()
     {
