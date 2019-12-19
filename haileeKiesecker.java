@@ -115,9 +115,23 @@ public class haileeKiesecker extends ClobberBot
         while(it.hasNext())
         {
             ImmutablePoint2D p = (ImmutablePoint2D)(it.next());
+            double c = Math.sqrt(Math.pow(2, Math.abs(p.getX() - currState.me.getX())) + Math.pow(2, Math.abs(p.getY() - currState.me.getY())));
+            if (c < closeBullet && c < 500.0){
+                closeBullet = c;
+                closestBullet = p;
+            }
             
-           
         }
+
+        //where is the bullet
+
+        return whatQuad(closestBullet.getX(), closestBullet.getY());
+
+
+    }
+
+    private int whatQuad(double x, double y){
+        
 
 
     }
