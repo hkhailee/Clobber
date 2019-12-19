@@ -16,10 +16,10 @@ public class ClobberBotAction
     public static final int LEFT = 16;
     public static final int RIGHT = 32;
 
-    public static final int LEFTDOWN = LEFT & DOWN;
-    public static final int RIGHTDOWN = RIGHT & DOWN;
-    public static final int LEFTUP = LEFT & UP;
-    public static final int RIGHTUP = RIGHT & UP;
+    public static final int LEFTDOWN = LEFT | DOWN;
+    public static final int RIGHTDOWN = RIGHT | DOWN;
+    public static final int LEFTUP = LEFT | UP;
+    public static final int RIGHTUP = RIGHT | UP;
 
     private int todo;
 
