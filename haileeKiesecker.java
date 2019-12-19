@@ -79,31 +79,35 @@ public class haileeKiesecker extends ClobberBot
         }
         else if(currAction==null || rand.nextInt(20)>18)
         {
-            switch(rand.nextInt(4))
+            switch(decideMove(currState))
             {
-                case 0:
-                    currAction = new ClobberBotAction(ClobberBotAction.MOVE, ClobberBotAction.UP);
-                break;
+              
                 case 1:
-                    currAction = new ClobberBotAction(ClobberBotAction.MOVE, ClobberBotAction.DOWN);
-                break;
-                case 2:
                     currAction = new ClobberBotAction(ClobberBotAction.MOVE, ClobberBotAction.LEFT);
                 break;
+                case 2:
+                    currAction = new ClobberBotAction(ClobberBotAction.MOVE, ClobberBotAction.LEFTUP);
+                break;
                 case 3:
-                    currAction = new ClobberBotAction(ClobberBotAction.MOVE, ClobberBotAction.RIGHT);
+                    currAction = new ClobberBotAction(ClobberBotAction.MOVE, ClobberBotAction.UP);
                 break;
                 case 4:
-                    currAction = new ClobberBotAction(ClobberBotAction.MOVE, ClobberBotAction.UP | ClobberBotAction.LEFT);
+                    currAction = new ClobberBotAction(ClobberBotAction.MOVE, ClobberBotAction.RIGHTUP);
                 break;
                 case 5:
-                    currAction = new ClobberBotAction(ClobberBotAction.MOVE, ClobberBotAction.UP | ClobberBotAction.RIGHT);
+                    currAction = new ClobberBotAction(ClobberBotAction.MOVE, ClobberBotAction.RIGHT);
                 break;
                 case 6:
-                    currAction = new ClobberBotAction(ClobberBotAction.MOVE, ClobberBotAction.DOWN | ClobberBotAction.LEFT);
+                    currAction = new ClobberBotAction(ClobberBotAction.MOVE, ClobberBotAction.RIGHTDOWN );
+                break;
+                case 7:
+                    currAction = new ClobberBotAction(ClobberBotAction.MOVE, ClobberBotAction.DOWN );
+                break;
+                case 8:
+                    currAction = new ClobberBotAction(ClobberBotAction.MOVE, ClobberBotAction.LEFTDOWN );
                 break;
                 default:
-                    currAction = new ClobberBotAction(ClobberBotAction.MOVE, ClobberBotAction.DOWN | ClobberBotAction.RIGHT);
+                    currAction = new ClobberBotAction(ClobberBotAction.MOVE, ClobberBotAction.NONE);
                 break;
             }
         }
@@ -112,11 +116,22 @@ public class haileeKiesecker extends ClobberBot
 
     private int decideMove(WhatIKnow currState){
         Iterator<BulletPoint2D> it = currState.bullets.iterator();
+        BulletPoint2D closestBullet =null;
+        double closeBullet = Double.MAX_VALUE;
         while(it.hasNext())
         {
-            ImmutablePoint2D p = (ImmutablePoint2D)(it.next());
-            double c = Math.sqrt(Math.pow(2, Math.abs(p.getX() - currState.me.getX())) + Math.pow(2, Math.abs(p.getY() - currState.me.getY())));
-            if (c < closeBullet && c < 500.0){
+            
+            BulletPoint2D p = (BulletPoint2D)(it.next());
+            double x =  Math.abs(p.getX() - currState.me.getX());
+            
+            double y = Math.abs(p.getY() - currState.me.getY());
+            double x2 = Math.pow(x,2);
+            double y2  = Math.pow(y,2);
+            double c = Math.sqrt( x2+y2 );
+            
+            if (c < closeBullet && c < 250.0){
+                System.out.println(c);
+                
                 closeBullet = c;
                 closestBullet = p;
             }
@@ -124,15 +139,44 @@ public class haileeKiesecker extends ClobberBot
         }
 
         //where is the bullet
-
-        return whatQuad(closestBullet.getX(), closestBullet.getY());
-
+        if(closestBullet != null){
+        return whatQuad(closestBullet.getX(), closestBullet.getY(), currState);
+        }
+        else{
+            return 0;
+        }
 
     }
 
-    private int whatQuad(double x, double y){
+    private int whatQuad(double bulletX, double bulletY, WhatIKnow currState){
         
-
+        if(bulletX < currState.me.getX() && bulletY < currState.me.getY()){
+            return 8;
+        }
+        if(bulletX == currState.me.getX() && bulletY < currState.me.getY()){
+            return 1;
+        }
+        if(bulletX > currState.me.getX() && bulletY < currState.me.getY()){
+           return 2;
+        }
+        if(bulletX > currState.me.getX() && bulletY == currState.me.getY()){
+           return 3;
+        }
+        if(bulletX > currState.me.getX() && bulletY > currState.me.getY()){
+            return 4;
+        }
+        if(bulletX == currState.me.getX() && bulletY > currState.me.getY()){
+            return 5;
+        }
+        if(bulletX < currState.me.getX() && bulletY > currState.me.getY()){
+            return 6;
+        }
+        if(bulletX < currState.me.getX() && bulletY == currState.me.getY()){
+            return 7;
+        }
+       
+        return 0;
+        
 
     }
 
