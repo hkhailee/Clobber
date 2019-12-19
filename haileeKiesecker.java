@@ -3,6 +3,8 @@ import java.awt.geom.*;
 import java.awt.*;
 import java.util.*;
 
+
+
 /** This is a lot like ClobberBot3, but has an even stronger tendency to keep moving in the same direction.  Also,
  * I've given you an example of how to read the WhatIKnow state to see where all the bullets and other bots are. */
 public class haileeKiesecker extends ClobberBot
@@ -27,6 +29,7 @@ public class haileeKiesecker extends ClobberBot
         Iterator<BulletPoint2D> it = currState.bullets.iterator();
         while(it.hasNext())
         {
+
             ImmutablePoint2D p = (ImmutablePoint2D)(it.next());
             System.out.print(p + ", ");
         }
@@ -43,40 +46,15 @@ public class haileeKiesecker extends ClobberBot
 
     public ClobberBotAction takeTurn(WhatIKnow currState)
     {
+        shotBot(currState);
         //showWhatIKnow(currState); // @@@ Uncomment this line to see it print out all bullet and bot positions every turn
         shotclock--;
         if(shotclock<=0)
         {
             shotclock=game.getShotFrequency()+1;
-            switch(rand.nextInt(8))
-            {
-                case 0:
-                    shotAction = new ClobberBotAction(ClobberBotAction.SHOOT, ClobberBotAction.UP);
-                break;
-                case 1:
-                    shotAction = new ClobberBotAction(ClobberBotAction.SHOOT, ClobberBotAction.DOWN);
-                break;
-                case 2:
-                    shotAction = new ClobberBotAction(ClobberBotAction.SHOOT, ClobberBotAction.LEFT);
-                break;
-                case 3:
-                    shotAction = new ClobberBotAction(ClobberBotAction.SHOOT, ClobberBotAction.RIGHT);
-                break;
-                case 4:
-                    shotAction = new ClobberBotAction(ClobberBotAction.SHOOT, ClobberBotAction.UP | ClobberBotAction.LEFT);
-                break;
-                case 5:
-                    shotAction = new ClobberBotAction(ClobberBotAction.SHOOT, 
-                            ClobberBotAction.UP | ClobberBotAction.RIGHT | ClobberBotAction.DOWN | ClobberBotAction.LEFT);
-                break;
-                case 6:
-                    shotAction = new ClobberBotAction(ClobberBotAction.SHOOT, ClobberBotAction.DOWN | ClobberBotAction.LEFT);
-                break;
-                default:
-                    shotAction = new ClobberBotAction(ClobberBotAction.SHOOT, ClobberBotAction.DOWN | ClobberBotAction.RIGHT);
-                break;
-            }
-            return shotAction;
+            return shotBot(currState);
+            
+           
         }
         else if(currAction==null || rand.nextInt(20)>18)
         {
@@ -90,6 +68,76 @@ public class haileeKiesecker extends ClobberBot
             }
         }
         return currAction;
+    }
+
+    private ClobberBotAction shotBot(WhatIKnow currState){
+        Iterator<BotPoint2D> bots = currState.bots.iterator();
+        BotPoint2D deadBot=null ;
+        double randAngle = 0;
+        double closestbot= Double.MAX_VALUE; 
+        while(bots.hasNext()){
+            BotPoint2D closeBot = (BotPoint2D)(bots.next());
+           
+            //getting the closest bott=============================================================
+            double x = Math.abs(closeBot.getX() - currState.me.getX());
+            double y = Math.abs(closeBot.getY() - currState.me.getY());
+            double x2 = Math.pow(x,2);
+            double y2  = Math.pow(y,2);
+            double c = Math.sqrt( x2+y2 );
+            //System.out.println("bot id: closeBot" + closeBot.getID() + " distance from me"+ c);
+            
+            if(c < closestbot){
+                deadBot=closeBot; //assigned the closest bot
+                closestbot = c;
+                //find the angle of a bot=============================================================
+                double u = (deadBot.getX()* currState.me.getX());
+                double v = (deadBot.getY()* currState.me.getY());
+
+                double sU = Math.sqrt(Math.pow(deadBot.getX(), 2)+ Math.pow(deadBot.getY(), 2));
+                double sV = Math.sqrt(Math.pow(currState.me.getX(), 2)+ Math.pow(currState.me.getY(), 2));
+
+                double cos = ((u+v) / (sU*sV));
+                randAngle = (Math.acos(cos)*100);
+                //if(deadBot.getY()>currState.me.getY() )
+                   // randAngle = randAngle;
+
+               // System.out.println(randAngle) ;
+            }
+
+        }
+
+        //given the angle and the closest bot
+
+        //top left 
+        if((deadBot.getX()<currState.me.getX()&& 10<=(deadBot.getY()-currState.me.getY())&&(randAngle >0 && randAngle<18))  ){
+            return new ClobberBotAction(ClobberBotAction.SHOOT, ClobberBotAction.LEFT);
+        }
+        if((deadBot.getX()>currState.me.getX()&& 10<=(deadBot.getY()-currState.me.getY())&&(randAngle >0 && randAngle<18))){
+            return new ClobberBotAction(ClobberBotAction.SHOOT, ClobberBotAction.RIGHT);
+        }
+        if(10<=(deadBot.getX()-currState.me.getX())&& deadBot.getY()<currState.me.getY()&&(randAngle >0 && randAngle<18)){
+            return new ClobberBotAction(ClobberBotAction.SHOOT, ClobberBotAction.UP);
+        } 
+        if(10<=(deadBot.getX()-currState.me.getX())&& deadBot.getY()>currState.me.getY()&&(randAngle >0 && randAngle<18)){
+            return new ClobberBotAction(ClobberBotAction.SHOOT, ClobberBotAction.DOWN);
+        }    
+        if((deadBot.getX()<currState.me.getX()&& deadBot.getY()<currState.me.getY())){
+            return new ClobberBotAction(ClobberBotAction.SHOOT, ClobberBotAction.LEFTUP);
+        }
+        if((deadBot.getX()>currState.me.getX()&& deadBot.getY()<currState.me.getY()) ){
+            return new ClobberBotAction(ClobberBotAction.SHOOT, ClobberBotAction.RIGHTUP);
+
+        }
+        if((deadBot.getX()>currState.me.getX()&& deadBot.getY()>currState.me.getY())){
+            return new ClobberBotAction(ClobberBotAction.SHOOT, ClobberBotAction.RIGHTDOWN);
+        }
+        if((deadBot.getX()<currState.me.getX()&& deadBot.getY()>currState.me.getY())){
+            return new ClobberBotAction(ClobberBotAction.SHOOT, ClobberBotAction.LEFTDOWN);
+        }
+       
+       
+       return new ClobberBotAction(ClobberBotAction.SHOOT, ClobberBotAction.RIGHTDOWN);
+
     }
 
     private ClobberBotAction decideMove(WhatIKnow currState){
