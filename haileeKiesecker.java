@@ -69,7 +69,7 @@ public class haileeKiesecker extends ClobberBot {
 	private ClobberBotAction shotBot(WhatIKnow currState) {
 		Iterator<BotPoint2D> bots = currState.bots.iterator();
 		BotPoint2D deadBot = null;
-		double randAngle = 0;
+		double angle = 0;
 		double closestbot = Double.MAX_VALUE;
 		while (bots.hasNext()) {
 			BotPoint2D closeBot = (BotPoint2D) (bots.next());
@@ -89,53 +89,52 @@ public class haileeKiesecker extends ClobberBot {
 				closestbot = c;
 				// find the angle of a
 				// bot=============================================================
-				double u = (deadBot.getX() * currState.me.getX());
-				double v = (deadBot.getY() * currState.me.getY());
-
-				double sU = Math.sqrt(Math.pow(deadBot.getX(), 2) + Math.pow(deadBot.getY(), 2));
-				double sV = Math.sqrt(Math.pow(currState.me.getX(), 2) + Math.pow(currState.me.getY(), 2));
-
-				double cos = ((u + v) / (sU * sV));
-				randAngle = (Math.acos(cos) * 100);
+//				double u = (deadBot.getX() * currState.me.getX());
+//				double v = (deadBot.getY() * currState.me.getY());
+//
+//				double sU = Math.sqrt(Math.pow(deadBot.getX(), 2) + Math.pow(deadBot.getY(), 2));
+//				double sV = Math.sqrt(Math.pow(currState.me.getX(), 2) + Math.pow(currState.me.getY(), 2));
+//
+//				double cos = ((u + v) / (sU * sV));
+//				
+//				randAngle = (Math.acos(cos) * 100);
+				
+				angle = getBotAngle(deadBot, currState.me.getX(), currState.me.getY());
 			}
 
 		}
 
 		// given the angle and the closest bot
 
-		// top left
-		if ((deadBot.getX() < currState.me.getX() && 10 <= (deadBot.getY() - currState.me.getY())
-				&& (randAngle > 0 && randAngle < 18))) {
-			return new ClobberBotAction(ClobberBotAction.SHOOT, ClobberBotAction.LEFT);
-		}
-		if ((deadBot.getX() > currState.me.getX() && 10 <= (deadBot.getY() - currState.me.getY())
-				&& (randAngle > 0 && randAngle < 18))) {
+		if (0 <= angle && angle <= 22.5 || 337.5 <= angle && angle <= 360 ) {
 			return new ClobberBotAction(ClobberBotAction.SHOOT, ClobberBotAction.RIGHT);
 		}
-		if (10 <= (deadBot.getX() - currState.me.getX()) && deadBot.getY() < currState.me.getY()
-				&& (randAngle > 0 && randAngle < 18)) {
+		else if (22.5 < angle && angle <= 67.5) {
+			return new ClobberBotAction(ClobberBotAction.SHOOT, ClobberBotAction.RIGHTUP);
+		}
+		else if (67.5 < angle && angle <= 112.5) {
 			return new ClobberBotAction(ClobberBotAction.SHOOT, ClobberBotAction.UP);
 		}
-		if (10 <= (deadBot.getX() - currState.me.getX()) && deadBot.getY() > currState.me.getY()
-				&& (randAngle > 0 && randAngle < 18)) {
-			return new ClobberBotAction(ClobberBotAction.SHOOT, ClobberBotAction.DOWN);
-		}
-		if ((deadBot.getX() < currState.me.getX() && deadBot.getY() < currState.me.getY())) {
+		else if (112.5 < angle && angle <= 157.5) {
 			return new ClobberBotAction(ClobberBotAction.SHOOT, ClobberBotAction.LEFTUP);
 		}
-		if ((deadBot.getX() > currState.me.getX() && deadBot.getY() < currState.me.getY())) {
-			return new ClobberBotAction(ClobberBotAction.SHOOT, ClobberBotAction.RIGHTUP);
-
+		else if (157.5 < angle && angle <= 202.5) {
+			return new ClobberBotAction(ClobberBotAction.SHOOT, ClobberBotAction.LEFT);
 		}
-		if ((deadBot.getX() > currState.me.getX() && deadBot.getY() > currState.me.getY())) {
-			return new ClobberBotAction(ClobberBotAction.SHOOT, ClobberBotAction.RIGHTDOWN);
-		}
-		if ((deadBot.getX() < currState.me.getX() && deadBot.getY() > currState.me.getY())) {
+		else if (202.5 < angle && angle <= 247.5) {
 			return new ClobberBotAction(ClobberBotAction.SHOOT, ClobberBotAction.LEFTDOWN);
 		}
-
-		return new ClobberBotAction(ClobberBotAction.SHOOT, ClobberBotAction.RIGHTDOWN);
-
+		else if (247.5 < angle && angle <= 292.5) {
+			return new ClobberBotAction(ClobberBotAction.SHOOT, ClobberBotAction.DOWN);
+		}
+		else if (292.5 < angle && angle <= 337.5) {
+			return new ClobberBotAction(ClobberBotAction.SHOOT, ClobberBotAction.RIGHTDOWN);
+		}
+		else if (337.5 < angle && angle <= 360 || 0 <= angle && angle < 22.5) {
+			return new ClobberBotAction(ClobberBotAction.SHOOT, ClobberBotAction.RIGHT);
+		}else {
+			return new ClobberBotAction(ClobberBotAction.SHOOT, ClobberBotAction.NONE);
+		}
 	}
 
 	private ClobberBotAction decideMove(WhatIKnow currState) {
