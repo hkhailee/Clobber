@@ -53,13 +53,13 @@ public class haileeKiesecker extends ClobberBot {
 		prevState = currState;
 		return currAction;
 	}
-	
+
 	private BulletPoint2D getBullet(WhatIKnow state, int id) {
 		Iterator<BulletPoint2D> it = state.bullets.iterator();
 		while (it.hasNext()) {
 
 			BulletPoint2D p = it.next();
-			if(p.getID() == id) {
+			if (p.getID() == id) {
 				return p;
 			}
 		}
@@ -97,10 +97,6 @@ public class haileeKiesecker extends ClobberBot {
 
 				double cos = ((u + v) / (sU * sV));
 				randAngle = (Math.acos(cos) * 100);
-				// if(deadBot.getY()>currState.me.getY() )
-				// randAngle = randAngle;
-
-				// System.out.println(randAngle) ;
 			}
 
 		}
@@ -143,36 +139,32 @@ public class haileeKiesecker extends ClobberBot {
 	}
 
 	private ClobberBotAction decideMove(WhatIKnow currState) {
-		
-		if(prevState == null) {
+		currAction = new ClobberBotAction(ClobberBotAction.MOVE, ClobberBotAction.NONE);
+		if (prevState == null) {
 			currAction = new ClobberBotAction(ClobberBotAction.MOVE, ClobberBotAction.NONE);
 			return currAction;
 		}
-		
+
 		Iterator<BulletPoint2D> it = currState.bullets.iterator();
 		BulletPoint2D closestBullet = null;
 		double closeBullet = Double.MAX_VALUE;
 		while (it.hasNext()) {
 			BulletPoint2D bullet = (BulletPoint2D) (it.next());
 			BulletPoint2D prevBullet = getBullet(prevState, bullet.getID());
-			if(prevBullet!= null) {	
-				if(isBulletGoingToHitMe(prevBullet, bullet, currState.me.getX(), currState.me.getY())) {
-					
-				}
-				
+			if (prevBullet != null) {
 				double x = Math.abs(bullet.getX() - currState.me.getX());
-				
+
 				double y = Math.abs(bullet.getY() - currState.me.getY());
 				double x2 = Math.pow(x, 2);
 				double y2 = Math.pow(y, 2);
 				double c = Math.sqrt(x2 + y2);
-				if(c < closeBullet) {
+				if (c < closeBullet) {
 					closeBullet = c;
 					closestBullet = bullet;
 				}
 			}
 		}
-		
+
 		if (closeBullet < 70.0) { // we need to avoid the bullet
 			int quad = whatQuad(closestBullet.getX(), closestBullet.getY(), currState);
 			System.out.println(quad);
@@ -206,28 +198,84 @@ public class haileeKiesecker extends ClobberBot {
 				break;
 			}
 
-		}else { // we need to get closer to another bot
-			currAction = new ClobberBotAction(ClobberBotAction.MOVE, ClobberBotAction.NONE);
+		} else { // we need to get closer to another bot
+			BotPoint2D bot = getClosestBot(currState.bots, currState);
+			if(getBotDistance(bot, currState.me.getX(), currState.me.getY()) > 200) {
+				double angle = getBotAngle(bot, currState.me.getX(), currState.me.getY());
+				if (0 <= angle && angle <= 22.5 || 337.5 <= angle && angle <= 360 ) {
+					currAction = new ClobberBotAction(ClobberBotAction.MOVE, ClobberBotAction.RIGHT);
+				}
+				else if (22.5 < angle && angle <= 67.5) {
+					currAction = new ClobberBotAction(ClobberBotAction.MOVE, ClobberBotAction.RIGHTUP);
+				}
+				else if (67.5 < angle && angle <= 112.5) {
+					currAction = new ClobberBotAction(ClobberBotAction.MOVE, ClobberBotAction.UP);
+				}
+				else if (112.5 < angle && angle <= 157.5) {
+					currAction = new ClobberBotAction(ClobberBotAction.MOVE, ClobberBotAction.LEFTUP);
+				}
+				else if (157.5 < angle && angle <= 202.5) {
+					currAction = new ClobberBotAction(ClobberBotAction.MOVE, ClobberBotAction.LEFT);
+				}
+				else if (202.5 < angle && angle <= 247.5) {
+					currAction = new ClobberBotAction(ClobberBotAction.MOVE, ClobberBotAction.LEFTDOWN);
+				}
+				else if (247.5 < angle && angle <= 292.5) {
+					currAction = new ClobberBotAction(ClobberBotAction.MOVE, ClobberBotAction.DOWN);
+				}
+				else if (292.5 < angle && angle <= 337.5) {
+					currAction = new ClobberBotAction(ClobberBotAction.MOVE, ClobberBotAction.RIGHTDOWN);
+				}
+				else if (337.5 < angle && angle <= 360 || 0 <= angle && angle < 22.5) {
+					currAction = new ClobberBotAction(ClobberBotAction.MOVE, ClobberBotAction.RIGHT);
+				}else {
+					currAction = new ClobberBotAction(ClobberBotAction.MOVE, ClobberBotAction.NONE);
+				}
+			}
 		}
 		return currAction;
 	}
 
-	private boolean isBulletGoingToHitMe(BulletPoint2D before, BulletPoint2D after, double x, double y) {
-		// TODO Auto-generated method stub
-		return false;
+	private BotPoint2D getClosestBot(Vector<BotPoint2D> bots, WhatIKnow currState) {
+		BotPoint2D deadBot = null;
+		double dist = Double.MAX_VALUE;
+		for(BotPoint2D bot : bots) {
+			double c = getBotDistance(bot, currState.me.getX(), currState.me.getY());
+			if(c < dist) {
+				dist = c;
+				deadBot = bot;
+			}
+		}
+		return deadBot;
+	}
+	
+	private double getBotDistance(BotPoint2D bot, double x, double y) {
+		return Math.hypot(bot.getX() - x, bot.getY() - y);
+	}
+	
+	private double getBotAngle(BotPoint2D bot, double x, double y) {
+		double rad = Math.atan2(bot.getY() - y, bot.getX() - x);
+		double angle = Math.toDegrees(rad);
+		angle = (360 - angle) % 360;
+		return angle;
 	}
 
 	private int whatQuad(double bulletX, double bulletY, WhatIKnow currState) { // where is it relative to me
-		if ((bulletX < currState.me.getX()+10) && (bulletX > currState.me.getX()-10) && (bulletY < currState.me.getY())) {// up
+		int pixelWindow = 30;
+		if ((bulletX < currState.me.getX() + pixelWindow) && (bulletX > currState.me.getX() - pixelWindow)
+				&& (bulletY < currState.me.getY())) {// up
 			return 1;
 		}
-		if (bulletX > currState.me.getX() && (bulletY > currState.me.getY()-10) && (bulletY < currState.me.getY()+10)) { // right
+		if (bulletX > currState.me.getX() && (bulletY > currState.me.getY() - pixelWindow)
+				&& (bulletY < currState.me.getY() + pixelWindow)) { // right
 			return 3;
 		}
-		if((bulletX < currState.me.getX()+10) && (bulletX > currState.me.getX()-10) && (bulletY > currState.me.getY())) {// down
+		if ((bulletX < currState.me.getX() + pixelWindow) && (bulletX > currState.me.getX() - pixelWindow)
+				&& (bulletY > currState.me.getY())) {// down
 			return 5;
 		}
-		if (bulletX < currState.me.getX() && (bulletY > currState.me.getY()-10) && (bulletY < currState.me.getY()+10)) { // left
+		if (bulletX < currState.me.getX() && (bulletY > currState.me.getY() - pixelWindow)
+				&& (bulletY < currState.me.getY() + pixelWindow)) { // left
 			return 7;
 		}
 		if (bulletX < currState.me.getX() && bulletY < currState.me.getY()) { // up left
@@ -250,10 +298,10 @@ public class haileeKiesecker extends ClobberBot {
 	public String toString() {
 		return "tiberuisv2 by Hailee lucas";
 	}
-	
+
 	public class Vector2D {
 		public Vector2D(double x1, double y1, double x2, double y2) {
-			
+
 		}
 	}
 }
